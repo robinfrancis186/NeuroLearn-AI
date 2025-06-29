@@ -1,0 +1,1624 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import '../../../../shared/themes/app_theme.dart';
+import '../../../../shared/widgets/animated_card.dart';
+import '../../../../shared/providers/app_providers.dart';
+
+/// Story Builder Page - Memory to Learning Story Conversion
+/// 
+/// This page collects personal memories from parents, caretakers, and students
+/// and converts them into educational learning stories for neurodivergent students.
+/// 
+/// Process:
+/// 1. Collect personal memory details (location, people, events)
+/// 2. Use AI to transform the memory into an educational story
+/// 3. Incorporate family members' names and familiar locations
+/// 4. Add learning elements (math, reading, problem-solving)
+/// 
+/// Example: "Dad and I picked apples" becomes "Dad had 2 apples and you had 2 apples.
+/// Dad gave you all his apples. Now how many apples do you have? 2 + 2 = 4 apples!"
+/// 
+/// This approach makes learning more relatable and meaningful for neurodivergent students
+/// by using their own memories and relationships as the foundation for education.
+
+class StoryBuilderPage extends ConsumerStatefulWidget {
+  const StoryBuilderPage({super.key});
+
+  @override
+  ConsumerState<StoryBuilderPage> createState() => _StoryBuilderPageState();
+}
+
+class _StoryBuilderPageState extends ConsumerState<StoryBuilderPage> {
+  String _selectedMode = '';
+  final PageController _pageController = PageController();
+  int _currentStep = 0;
+
+  // Manual mode controllers
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _peopleController = TextEditingController();
+  final TextEditingController _matterController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _specialDetailsController = TextEditingController();
+  final TextEditingController _storyController = TextEditingController();
+
+  // Voice mode data
+  String _voiceTranscription = '';
+  bool _isRecording = false;
+  bool _isProcessingVoice = false;
+  String? _uploadedFileName;
+  bool _isProcessingUpload = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to text controllers to trigger UI updates
+    _locationController.addListener(() => setState(() {}));
+    _peopleController.addListener(() => setState(() {}));
+    _matterController.addListener(() => setState(() {}));
+    _titleController.addListener(() => setState(() {}));
+    _specialDetailsController.addListener(() => setState(() {}));
+    _storyController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _locationController.dispose();
+    _peopleController.dispose();
+    _matterController.dispose();
+    _titleController.dispose();
+    _specialDetailsController.dispose();
+    _storyController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.lightBlue.withOpacity(0.1),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Story Builder',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.highContrastDark,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.highContrastDark),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _selectedMode.isEmpty ? _buildModeSelection() : _buildSelectedMode(),
+    );
+  }
+
+  Widget _buildModeSelection() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Share Your Personal Memory',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2),
+          const SizedBox(height: 8),
+          Text(
+            'We\'ll turn your family memories and events into personalized learning stories',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
+          const SizedBox(height: 32),
+          Expanded(
+            child: Column(
+              children: [
+                _buildModeCard(
+                  'Write Your Memory',
+                  'Type your personal story, family event, or special memory',
+                  Icons.edit,
+                  AppTheme.primaryBlue,
+                  'manual',
+                  0,
+                ),
+                const SizedBox(height: 20),
+                _buildModeCard(
+                  'Tell Your Memory',
+                  'Speak your personal story and we\'ll convert it to text',
+                  Icons.mic,
+                  AppTheme.lightBlue,
+                  'voice',
+                  1,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeCard(String title, String description, IconData icon, Color color, String mode, int index) {
+    return AnimatedCard(
+      onTap: () => _selectMode(mode),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 32,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.highContrastDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mediumGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    ).animate(delay: (index * 200).ms).fadeIn().slideY(begin: 0.3);
+  }
+
+  Widget _buildSelectedMode() {
+    if (_selectedMode == 'manual') {
+      return _buildManualMode();
+    } else if (_selectedMode == 'voice') {
+      return _buildVoiceMode();
+    }
+    return Container();
+  }
+
+  Widget _buildManualMode() {
+    final steps = [
+      'Memory Location',
+      'Family & Friends', 
+      'What Happened',
+      'Memory Title',
+      'Tell Your Memory'
+    ];
+
+    return Column(
+      children: [
+        // Progress indicator
+        Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(steps.length, (index) {
+                  final isCompleted = index < _currentStep;
+                  final isCurrent = index == _currentStep;
+                  
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isCompleted 
+                                  ? AppTheme.primaryBlue 
+                                  : isCurrent 
+                                      ? AppTheme.lightBlue 
+                                      : AppTheme.lightGray,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: isCompleted
+                                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                                  : Text(
+                                      '${index + 1}',
+                                      style: TextStyle(
+                                        color: isCurrent ? Colors.white : AppTheme.mediumGray,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            steps[index],
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isCurrent ? AppTheme.primaryBlue : AppTheme.mediumGray,
+                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+              LinearProgressIndicator(
+                value: (_currentStep + 1) / steps.length,
+                backgroundColor: AppTheme.lightGray,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                minHeight: 4,
+              ),
+            ],
+          ),
+        ),
+        // Content
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentStep = index;
+              });
+            },
+            children: [
+              _buildLocationStep(),
+              _buildPeopleStep(),
+              _buildMatterStep(),
+              _buildTitleStep(),
+              _buildStoryWritingStep(),
+            ],
+          ),
+        ),
+        // Navigation buttons
+        _buildNavigationButtons(),
+      ],
+    );
+  }
+
+  Widget _buildLocationStep() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Where did this memory happen?',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2),
+          const SizedBox(height: 8),
+          Text(
+            'Tell us the place where this personal memory or family event took place',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: AnimatedCard(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Story Location',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _locationController,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., At home in the kitchen, grandma\'s house, the backyard, school playground...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.lightGray),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.primaryBlue),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.lightGray.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeopleStep() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Who was involved in this memory?',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tell us about the family members, friends, or people who were part of this memory',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: AnimatedCard(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'People Involved',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.lightBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _peopleController,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., Dad, Mom, Sister Emma, Grandpa Joe, my friend Alex...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.lightGray),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.lightBlue),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.lightGray.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatterStep() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'What happened in this memory?',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Describe what happened, the events, activities, or special moments',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: AnimatedCard(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Story Matter',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.accentBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _matterController,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., We went apple picking, baking cookies with grandma, family game night, learning to ride a bike...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.lightGray),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.accentBlue),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.lightGray.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleStep() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'What should we call this memory?',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Give your memory a special title and add any extra details',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                                                      Text(
+                            'Memory Title',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _titleController,
+                            decoration: InputDecoration(
+                              hintText: 'e.g., Apple Picking Day, Grandma\'s Cookie Recipe, My First Bike Ride...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: AppTheme.lightGray),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.purple),
+                              ),
+                              filled: true,
+                              fillColor: AppTheme.lightGray.withOpacity(0.1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Special Details (Optional)',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _specialDetailsController,
+                            maxLines: 4,
+                            decoration: InputDecoration(
+                              hintText: 'Any special feelings, important details, or what made this memory special...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: AppTheme.lightGray),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.orange),
+                              ),
+                              filled: true,
+                              fillColor: AppTheme.lightGray.withOpacity(0.1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStoryWritingStep() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tell us your complete memory',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Share your personal memory in detail - we\'ll turn it into a learning story',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Story summary card
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Memory Summary',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_locationController.text.isNotEmpty)
+                            Text('📍 Location: ${_locationController.text}', style: Theme.of(context).textTheme.bodySmall),
+                          if (_peopleController.text.isNotEmpty)
+                            Text('👥 People: ${_peopleController.text}', style: Theme.of(context).textTheme.bodySmall),
+                          if (_matterController.text.isNotEmpty)
+                            Text('📖 About: ${_matterController.text}', style: Theme.of(context).textTheme.bodySmall),
+                          if (_titleController.text.isNotEmpty)
+                            Text('🏷️ Title: ${_titleController.text}', style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Story writing area
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Personal Memory',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 200,
+                            child: TextField(
+                              controller: _storyController,
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              decoration: InputDecoration(
+                                hintText: 'Tell us about your memory...\n\nDescribe what happened, who was there, what you did together, and any special moments. For example: "Last weekend, my dad and I went to the apple orchard. We picked 12 red apples and 8 green apples. Dad taught me how to count them by putting them in groups..."',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: AppTheme.lightGray),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: AppTheme.primaryBlue),
+                                ),
+                                filled: true,
+                                fillColor: AppTheme.lightGray.withOpacity(0.1),
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: _canGenerateStory() ? _saveStory : null,
+                                  icon: const Icon(Icons.auto_stories),
+                                  label: const Text('Generate Learning Story'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _canGenerateStory() ? AppTheme.primaryBlue : Colors.grey,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              ElevatedButton.icon(
+                                onPressed: _canGenerateStory() ? _previewStory : null,
+                                icon: const Icon(Icons.preview),
+                                label: const Text('Preview'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _canGenerateStory() ? AppTheme.accentBlue : Colors.grey,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 80), // Add bottom padding to prevent overflow
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceMode() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tell your memory with your voice',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.highContrastDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Record live or upload an audio file of your personal memory',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.mediumGray,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Voice recording section
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accentBlue.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Record Your Memory',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.accentBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTapDown: (_) => _startRecording(),
+                            onTapUp: (_) => _stopRecording(),
+                            onTapCancel: () => _stopRecording(),
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: _isRecording 
+                                    ? Colors.red.withOpacity(0.2)
+                                    : AppTheme.accentBlue.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _isRecording ? Colors.red : AppTheme.accentBlue,
+                                  width: 3,
+                                ),
+                              ),
+                              child: Icon(
+                                _isRecording ? Icons.stop : Icons.mic,
+                                size: 40,
+                                color: _isRecording ? Colors.red : AppTheme.accentBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _isRecording 
+                                ? 'Recording... Speak clearly!'
+                                : _isProcessingVoice
+                                    ? 'Processing your voice...'
+                                    : 'Hold to record your memory',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _isRecording 
+                                  ? Colors.red 
+                                  : _isProcessingVoice
+                                      ? AppTheme.primaryBlue
+                                      : AppTheme.accentBlue,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _isRecording 
+                                ? 'Release when finished'
+                                : 'Press and hold the microphone to start',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.mediumGray,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Divider with "OR"
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: AppTheme.lightGray)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.mediumGray,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: AppTheme.lightGray)),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // File upload section
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryBlue.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Upload Audio File',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: _uploadAudioFile,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryBlue.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.primaryBlue,
+                                  width: 3,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.upload_file,
+                                size: 40,
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _uploadedFileName ?? 'Upload your audio file',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _uploadedFileName != null ? Colors.green : AppTheme.primaryBlue,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _uploadedFileName != null 
+                                ? 'File uploaded successfully!'
+                                : 'Supports: MP3, WAV, M4A, OGG',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _uploadedFileName != null ? Colors.green : AppTheme.mediumGray,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_uploadedFileName != null) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _processUploadedFile,
+                                  icon: const Icon(Icons.auto_stories),
+                                  label: const Text('Convert to Learning Story'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryBlue,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                TextButton.icon(
+                                  onPressed: _clearUploadedFile,
+                                  icon: const Icon(Icons.clear),
+                                  label: const Text('Remove'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                
+                if (_voiceTranscription.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Story (Transcribed)',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _voiceTranscription,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _clearVoiceTranscription,
+                                  icon: const Icon(Icons.clear),
+                                  label: const Text('Clear'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppTheme.mediumGray,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: _saveVoiceStory,
+                                  icon: const Icon(Icons.save),
+                                  label: const Text('Save Story'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryBlue,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 80), // Bottom padding for scrolling
+              ],
+            ),
+          ),
+        ),        ],
+      ),
+    );
+  }
+
+  Widget _buildNavigationButtons() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (_currentStep > 0)
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _previousStep,
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Previous'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryBlue,
+                  side: BorderSide(color: AppTheme.primaryBlue),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          if (_currentStep > 0) const SizedBox(width: 12),
+          if (_currentStep < 4)
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _canProceed() ? _nextStep : null,
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('Next'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods
+  void _selectMode(String mode) {
+    setState(() {
+      _selectedMode = mode;
+      _currentStep = 0;
+    });
+  }
+
+  bool _canProceed() {
+    switch (_currentStep) {
+      case 0: return _locationController.text.isNotEmpty;
+      case 1: return _peopleController.text.isNotEmpty;
+      case 2: return _matterController.text.isNotEmpty;
+      case 3: return _titleController.text.isNotEmpty;
+      case 4: return _storyController.text.isNotEmpty;
+      default: return false;
+    }
+  }
+
+  bool _canGenerateStory() {
+    // Can generate story if we have some basic information
+    return _locationController.text.isNotEmpty || 
+           _peopleController.text.isNotEmpty || 
+           _matterController.text.isNotEmpty ||
+           _storyController.text.isNotEmpty;
+  }
+
+  void _nextStep() {
+    if (_currentStep < 4) {
+      setState(() {
+        _currentStep++;
+      });
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep--;
+      });
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _saveStory() {
+    final title = _titleController.text.isEmpty ? 'My Memory' : _titleController.text;
+    
+    // Generate story from collected information if text field is empty
+    if (_storyController.text.isEmpty) {
+      _storyController.text = _generateStoryFromInputs();
+    }
+    
+    // Show processing dialog for AI story generation
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('🤖 AI is converting your memory...'),
+            const SizedBox(height: 8),
+            const Text(
+              'Creating a personalized learning story using your family members and locations',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    // Simulate AI processing
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pop(context); // Close processing dialog
+      
+      // Add story to queue
+      final currentStories = ref.read(storyQueueProvider);
+      ref.read(storyQueueProvider.notifier).state = ['$title (Learning Story)', ...currentStories];
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Learning story "$title" generated successfully!'),
+          backgroundColor: AppTheme.primaryBlue,
+          action: SnackBarAction(
+            label: 'View Stories',
+            textColor: Colors.white,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      );
+      
+      // Show example of generated learning story
+      Future.delayed(const Duration(seconds: 1), () {
+        _showGeneratedStoryExample();
+      });
+    });
+  }
+
+  void _previewStory() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_titleController.text.isEmpty ? 'Memory Preview' : _titleController.text),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_locationController.text.isNotEmpty) ...[
+                  Text('📍 Location: ${_locationController.text}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                ],
+                if (_peopleController.text.isNotEmpty) ...[
+                  Text('👥 People: ${_peopleController.text}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                ],
+                if (_matterController.text.isNotEmpty) ...[
+                  Text('📖 About: ${_matterController.text}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                ],
+                Text(_storyController.text, style: const TextStyle(height: 1.5)),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _saveStory();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            child: const Text('Generate Learning Story', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGeneratedStoryExample() {
+    // Generate example based on user input
+    String exampleStory = _generateLearningStoryExample();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.auto_stories, color: Colors.green),
+            const SizedBox(width: 8),
+            Text('${_titleController.text} - Learning Story'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: const Text(
+                    '🤖 AI Generated Learning Story\nYour personal memory has been converted into an educational story with math, reading, and problem-solving elements!',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  exampleStory,
+                  style: const TextStyle(height: 1.6),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📚 Learning Elements Included:',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                      SizedBox(height: 4),
+                      Text('• Math: Counting, Addition, Subtraction'),
+                      Text('• Reading: Vocabulary, Comprehension'),
+                      Text('• Problem Solving: Logic, Decision Making'),
+                      Text('• Social Skills: Family Relationships'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Go back to home
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            child: const Text('Start Learning!', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _generateStoryFromInputs() {
+    String location = _locationController.text.isNotEmpty ? _locationController.text : 'at home';
+    String people = _peopleController.text.isNotEmpty ? _peopleController.text : 'family';
+    String matter = _matterController.text.isNotEmpty ? _matterController.text : 'spending time together';
+    
+    return 'This is a special memory that happened $location with $people. We were $matter. It was a wonderful time that we shared together, and it created lasting memories that we can turn into a learning adventure.';
+  }
+
+  String _generateLearningStoryExample() {
+    // Extract key elements from user input
+    String location = _locationController.text.isNotEmpty ? _locationController.text : 'at home';
+    String people = _peopleController.text.isNotEmpty ? _peopleController.text : 'family';
+    
+    // Generate a sample learning story that incorporates their memory
+    return '''Once upon a time, ${people.split(',').first.trim()} and you were $location. 
+
+${people.split(',').first.trim()} had a special surprise - a learning adventure! "${people.split(',').first.trim()} brought 5 red apples and 3 green apples. Can you help count how many apples we have altogether?" ${people.split(',').first.trim()} asked with a smile.
+
+You started counting: "1, 2, 3, 4, 5 red apples... and 1, 2, 3 green apples. So 5 + 3 = 8 apples total!" you said proudly.
+
+"Excellent!" said ${people.split(',').first.trim()}. "Now, if we eat 2 apples for our snack, how many will we have left?"
+
+You thought carefully: "8 - 2 = 6 apples left!"
+
+"You're such a smart learner!" ${people.split(',').first.trim()} said. "Let's put the apples in groups of 2. How many groups can we make?"
+
+Together, you arranged the 6 remaining apples: Group 1 (2 apples), Group 2 (2 apples), Group 3 (2 apples). "We can make 3 groups!" you discovered.
+
+This special memory at $location became a wonderful learning adventure where you practiced counting, addition, subtraction, and grouping - all while spending time with ${people.split(',').first.trim()}!
+
+🍎 Math Skills Learned: Counting to 8, Addition (5+3=8), Subtraction (8-2=6), Grouping (6÷2=3)
+❤️ Special Memory: Quality time with ${people.split(',').first.trim()} at $location''';
+  }
+
+  // Voice methods
+  void _startRecording() {
+    setState(() {
+      _isRecording = true;
+    });
+  }
+
+  void _stopRecording() {
+    if (!_isRecording) return;
+    
+    setState(() {
+      _isRecording = false;
+      _isProcessingVoice = true;
+    });
+    
+    // Simulate voice processing and transcription
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        _isProcessingVoice = false;
+        _voiceTranscription = 'Once upon a time, there was a brave little explorer who discovered a magical forest. '
+            'In this forest, all the animals could talk and they had amazing adventures together. '
+            'The explorer learned about friendship, kindness, and the importance of helping others. '
+            'It was the most wonderful adventure ever!';
+      });
+    });
+  }
+
+  void _clearVoiceTranscription() {
+    setState(() {
+      _voiceTranscription = '';
+    });
+  }
+
+  void _saveVoiceStory() {
+    const title = 'My Voice Memory';
+    
+    // Show processing dialog for AI story generation
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('🤖 AI is converting your spoken memory...'),
+            const SizedBox(height: 8),
+            const Text(
+              'Creating a personalized learning story from your voice recording',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    // Simulate AI processing
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pop(context); // Close processing dialog
+      
+      // Add story to queue
+      final currentStories = ref.read(storyQueueProvider);
+      ref.read(storyQueueProvider.notifier).state = ['$title (Voice Learning Story)', ...currentStories];
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Voice memory converted to learning story successfully!'),
+          backgroundColor: AppTheme.primaryBlue,
+          action: SnackBarAction(
+            label: 'View Stories',
+            textColor: Colors.white,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      );
+    });
+  }
+
+  // File upload methods
+  void _uploadAudioFile() {
+    // Simulate file picker
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Audio File'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Choose an audio file to upload:'),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.audiotrack, color: AppTheme.primaryBlue),
+              title: const Text('family_memory.mp3'),
+              subtitle: const Text('2.3 MB • 3:45 duration'),
+              onTap: () {
+                Navigator.pop(context);
+                _selectFile('family_memory.mp3');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.audiotrack, color: AppTheme.primaryBlue),
+              title: const Text('vacation_story.wav'),
+              subtitle: const Text('4.1 MB • 5:12 duration'),
+              onTap: () {
+                Navigator.pop(context);
+                _selectFile('vacation_story.wav');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.audiotrack, color: AppTheme.primaryBlue),
+              title: const Text('birthday_memory.m4a'),
+              subtitle: const Text('1.8 MB • 2:30 duration'),
+              onTap: () {
+                Navigator.pop(context);
+                _selectFile('birthday_memory.m4a');
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showFilePicker();
+            },
+            icon: const Icon(Icons.folder_open),
+            label: const Text('Browse Files'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilePicker() {
+    // Simulate file picker interface
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('📁 File picker would open here in a real app'),
+        backgroundColor: AppTheme.primaryBlue,
+      ),
+    );
+  }
+
+  void _selectFile(String fileName) {
+    setState(() {
+      _uploadedFileName = fileName;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✅ $fileName uploaded successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _processUploadedFile() {
+    if (_uploadedFileName == null) return;
+    
+    setState(() {
+      _isProcessingUpload = true;
+    });
+    
+    // Show processing dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('🎵 Processing $_uploadedFileName...'),
+            const SizedBox(height: 8),
+            const Text(
+              'Converting audio to text and creating learning story',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    // Simulate processing
+    Future.delayed(const Duration(seconds: 4), () {
+      setState(() {
+        _isProcessingUpload = false;
+        _voiceTranscription = 'Last summer, my family went to the beach. We collected 15 seashells on the shore. My dad found 8 shells, my mom found 4 shells, and I found 3 shells. We put them all in a bucket and counted them together. It was such a fun day building sandcastles and learning about ocean life!';
+      });
+      
+      Navigator.pop(context); // Close processing dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🎯 $_uploadedFileName converted to text successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    });
+  }
+
+  void _clearUploadedFile() {
+    setState(() {
+      _uploadedFileName = null;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🗑️ Audio file removed'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+} 

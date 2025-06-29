@@ -61,6 +61,9 @@ dependencies:
   # Accessibility
   flutter_accessibility_service: ^0.2.1
   
+  # Charts for dashboard
+  fl_chart: ^0.68.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

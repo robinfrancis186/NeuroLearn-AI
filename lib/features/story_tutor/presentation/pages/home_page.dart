@@ -8,9 +8,12 @@ import '../../../../shared/widgets/animated_card.dart';
 import '../../../../shared/widgets/mood_selector.dart';
 import '../../../../core/models/emotional_state.dart';
 import '../../../../core/models/student_profile.dart';
+import '../../../dashboard/presentation/pages/student_dashboard_page.dart';
+import '../../../communication/presentation/pages/communication_page.dart';
 import '../widgets/story_queue_widget.dart';
 import '../widgets/student_avatar_widget.dart';
 import 'story_session_page.dart';
+import 'story_builder_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -381,9 +384,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildQuickActions() {
     final actions = [
       {
-        'title': 'Create Story',
-        'subtitle': 'Build your own adventure',
-        'icon': Icons.create,
+        'title': 'Share Memory',
+        'subtitle': 'Turn your family stories into learning adventures',
+        'icon': Icons.family_restroom,
         'color': AppTheme.primaryBlue,
         'onTap': () => _navigateToStoryBuilder(),
       },
@@ -399,7 +402,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         'subtitle': 'See how you\'re doing',
         'icon': Icons.trending_up,
         'color': AppTheme.accentBlue,
-        'onTap': () => _navigateToProgress(),
+        'onTap': () {
+          final currentStudent = ref.read(currentStudentProvider);
+          if (currentStudent != null) {
+            _navigateToProgress(currentStudent);
+          }
+        },
       },
     ];
 
@@ -560,14 +568,29 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _navigateToStoryBuilder() {
-    // Navigate to story builder
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const StoryBuilderPage(),
+      ),
+    );
   }
 
   void _navigateToCommunication() {
-    // Navigate to communication module
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CommunicationPage(),
+      ),
+    );
   }
 
-  void _navigateToProgress() {
-    // Navigate to progress dashboard
+  void _navigateToProgress(StudentProfile student) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StudentDashboardPage(student: student),
+      ),
+    );
   }
 } 
