@@ -47,8 +47,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Chrome device files
-.dart_tool/chrome-device/
+# Dart tool files
+.dart_tool/
 
 # Build files
 build/
@@ -56,6 +56,11 @@ build/
 
 # Web
 build/web/
+
+# Additional Flutter/Dart build artifacts
+.packages
+.pub-cache/
+.pub/
 
 # Windows
 windows/flutter/ephemeral/
