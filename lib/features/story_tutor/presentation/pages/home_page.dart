@@ -10,6 +10,8 @@ import '../../../../core/models/emotional_state.dart';
 import '../../../../core/models/student_profile.dart';
 import '../../../dashboard/presentation/pages/student_dashboard_page.dart';
 import '../../../communication/presentation/pages/communication_page.dart';
+import '../../../flashcards/presentation/pages/flashcards_page.dart';
+import '../../../ar_geography/presentation/pages/ar_geography_page.dart';
 import '../widgets/story_queue_widget.dart';
 import '../widgets/student_avatar_widget.dart';
 import 'story_session_page.dart';
@@ -391,11 +393,25 @@ class _HomePageState extends ConsumerState<HomePage> {
         'onTap': () => _navigateToStoryBuilder(),
       },
       {
+        'title': 'AR Geography',
+        'subtitle': 'Explore the world with hand tracking',
+        'icon': Icons.public,
+        'color': Colors.purple,
+        'onTap': () => _navigateToARGeography(),
+      },
+      {
         'title': 'Communication',
         'subtitle': 'Express yourself',
         'icon': Icons.chat_bubble,
         'color': AppTheme.lightBlue,
         'onTap': () => _navigateToCommunication(),
+      },
+      {
+        'title': 'Flashcards',
+        'subtitle': 'Practice with personalized flashcards',
+        'icon': Icons.quiz,
+        'color': Colors.green,
+        'onTap': () => _navigateToFlashcards(),
       },
       {
         'title': 'Progress',
@@ -585,11 +601,29 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  void _navigateToFlashcards() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FlashcardsPage(),
+      ),
+    );
+  }
+
   void _navigateToProgress(StudentProfile student) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => StudentDashboardPage(student: student),
+      ),
+    );
+  }
+
+  void _navigateToARGeography() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ARGeographyPage(),
       ),
     );
   }
