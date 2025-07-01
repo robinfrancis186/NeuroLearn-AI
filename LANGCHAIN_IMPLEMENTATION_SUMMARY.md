@@ -65,7 +65,7 @@ chmod +x setup.sh
 ./setup.sh
 
 # Add your OpenAI API key to .env file
-# OPENAI_API_KEY=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
+# OPENAI_API_KEY=your-openai-api-key-here
 
 # Start the LangChain backend
 python main.py
