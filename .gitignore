@@ -72,4 +72,83 @@ macos/Flutter/ephemeral/
 linux/flutter/ephemeral/
 
 # Flutter downloads
-flutter_macos_arm64.zip 
+flutter_macos_arm64.zip
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*_key
+*_secret
+*secret*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+android/app/*.jks
+android/key.properties
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+*.log.*
+logs/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+*.tmp
+*.temp 
