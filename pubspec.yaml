@@ -64,6 +64,9 @@ dependencies:
   # Charts for dashboard
   fl_chart: ^0.68.0
   
+  # UI and Navigation
+  go_router: ^7.1.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

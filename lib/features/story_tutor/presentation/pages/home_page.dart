@@ -16,6 +16,7 @@ import '../widgets/story_queue_widget.dart';
 import '../widgets/student_avatar_widget.dart';
 import 'story_session_page.dart';
 import 'story_builder_page.dart';
+import 'mistral_story_demo.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -386,6 +387,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildQuickActions() {
     final actions = [
       {
+        'title': 'Mistral AI Stories',
+        'subtitle': 'Generate stories with advanced AI (Mistral 7B)',
+        'icon': Icons.auto_awesome,
+        'color': Colors.deepPurple,
+        'onTap': () => _navigateToMistralDemo(),
+      },
+      {
         'title': 'Share Memory',
         'subtitle': 'Turn your family stories into learning adventures',
         'icon': Icons.family_restroom,
@@ -624,6 +632,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       context,
       MaterialPageRoute(
         builder: (context) => const ARGeographyPage(),
+      ),
+    );
+  }
+
+  void _navigateToMistralDemo() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MistralStoryDemo(),
       ),
     );
   }
