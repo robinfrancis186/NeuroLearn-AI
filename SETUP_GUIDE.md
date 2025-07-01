@@ -17,7 +17,7 @@
 4. Optionally add your organization ID
 
 ```dart
-static const String openAiApiKey = 'sk-your-actual-key-here';
+static const String openAiApiKey = 'your-openai-api-key-here';
 static const String openAiOrganizationId = 'org-your-org-id'; // Optional
 ```
 
