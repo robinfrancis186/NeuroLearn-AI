@@ -151,4 +151,7 @@ logs/
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Allow all Dart files in lib/ to be tracked
+!lib/**/*.dart
