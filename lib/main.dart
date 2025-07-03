@@ -11,6 +11,7 @@ import 'shared/themes/app_theme.dart';
 import 'shared/providers/app_providers.dart';
 import 'features/story_tutor/presentation/pages/home_page.dart';
 import 'features/story_tutor/presentation/pages/mistral_story_demo.dart';
+import 'core/models/emotional_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,12 @@ void main() async {
   
   // Initialize Hive for local storage
   await Hive.initFlutter();
+  // Register Hive adapters for emotional state and related types
+  Hive.registerAdapter(EmotionalStateAdapter());
+  Hive.registerAdapter(DetectedEmotionAdapter());
+  Hive.registerAdapter(EmotionalValenceAdapter());
+  Hive.registerAdapter(EmotionDetectionSourceAdapter());
+  Hive.registerAdapter(StoryMoodAdapter());
   
   // Initialize core services
   await VoiceService.initialize();
