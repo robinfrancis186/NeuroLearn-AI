@@ -52,11 +52,16 @@
     #camera-video {
       width: 100%;
       height: 100%;
-      opacity: 1;
+      opacity: 0; /* Hidden by default */
       position: relative;
       border-radius: 12px;
       object-fit: cover;
       transform: scaleX(-1); /* Mirror the video for natural selfie view */
+      transition: opacity 0.3s ease;
+    }
+    
+    #camera-video.active {
+      opacity: 1; /* Only visible when emotion engine is active */
     }
     
     #emotion-debug {
@@ -70,8 +75,12 @@
       font-family: monospace;
       font-size: 12px;
       z-index: 1000;
-      display: block;
+      display: none; /* Hidden by default */
       min-width: 200px;
+    }
+    
+    #emotion-debug.visible {
+      display: block; /* Only visible when emotion engine is active */
     }
     
     .status-active {
@@ -259,10 +268,10 @@
           
           this.isInitialized = true;
           window.emotionDetection.isInitialized = true;
-          window.emotionDetection.status = 'active';
+          window.emotionDetection.status = 'ready';
           
-          this.updateStatus('✅ Real-time emotion detection active', 'active');
-          this.updateCameraStatus('📹 Active');
+          this.updateStatus('🟡 Ready (stopped)', 'loading');
+          this.updateCameraStatus('🔴 Stopped');
           console.log('✅ Real emotion detection initialized successfully!');
           
         } catch (error) {
@@ -485,6 +494,44 @@
         }
       }
       
+      startEmotionDetection() {
+        if (!this.isInitialized) {
+          this.init();
+        }
+        
+        // Show camera and debug UI
+        if (this.video) {
+          this.video.classList.add('active');
+        }
+        
+        const debugElement = document.getElementById('emotion-debug');
+        if (debugElement) {
+          debugElement.classList.add('visible');
+        }
+        
+        window.emotionDetection.status = 'active';
+        this.updateStatus('✅ Real-time emotion detection active', 'active');
+        this.updateCameraStatus('📹 Active');
+        console.log('Emotion detection started');
+      }
+      
+      stopEmotionDetection() {
+        // Hide camera and debug UI
+        if (this.video) {
+          this.video.classList.remove('active');
+        }
+        
+        const debugElement = document.getElementById('emotion-debug');
+        if (debugElement) {
+          debugElement.classList.remove('visible');
+        }
+        
+        window.emotionDetection.status = 'stopped';
+        this.updateStatus('🟡 Ready (stopped)', 'loading');
+        this.updateCameraStatus('🔴 Stopped');
+        console.log('Emotion detection stopped');
+      }
+      
       notifyFlutter(data) {
         // Store in global variable for Flutter to access
         window.emotionDetection.lastUpdate = data;
@@ -511,13 +558,16 @@
       }
     }
     
-    // Initialize when page loads
+    // Initialize when page loads (but don't start detection automatically)
     let realEmotionDetector;
     window.addEventListener('load', () => {
       // Wait for Flutter to load
       setTimeout(() => {
         realEmotionDetector = new RealEmotionDetector();
         window.realEmotionDetector = realEmotionDetector;
+        
+        // DON'T auto-start detection - wait for explicit request
+        realEmotionDetector.stopEmotionDetection();
       }, 2000);
     });
     
@@ -528,6 +578,18 @@
     
     window.isEmotionDetectionReady = function() {
       return realEmotionDetector && realEmotionDetector.isInitialized;
+    };
+    
+    window.startEmotionDetection = function() {
+      if (realEmotionDetector) {
+        realEmotionDetector.startEmotionDetection();
+      }
+    };
+    
+    window.stopEmotionDetection = function() {
+      if (realEmotionDetector) {
+        realEmotionDetector.stopEmotionDetection();
+      }
     };
   </script>
 </body>
