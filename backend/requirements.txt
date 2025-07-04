@@ -15,7 +15,7 @@ librosa==0.10.1
 soundfile==0.12.1
 torch>=2.0.0
 torchaudio>=2.0.0
-openvoice
+# openvoice
 # OpenVoice dependencies
 inflect==7.0.0
 eng_to_ipa==0.0.2
