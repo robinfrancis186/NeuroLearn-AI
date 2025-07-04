@@ -110,4 +110,11 @@ class ProgressSummaryRequest(BaseModel):
     time_period: str
     progress_data: List[ProgressData]
     learning_insights: List[Dict[str, Any]]
-    visual_progress_data: Optional[Dict[str, Any]] = None 
+    visual_progress_data: Optional[Dict[str, Any]] = None
+
+class VoiceCloneRequest(BaseModel):
+    text: str = Field(..., description="Text to be converted to speech with cloned voice")
+    reference_audio: str = Field(..., description="Base64 encoded reference audio file")
+    speed: float = Field(default=1.0, description="Speech speed multiplier")
+    language: str = Field(default="English", description="Language for text-to-speech")
+    output_filename: Optional[str] = Field(default=None, description="Optional custom filename for output")

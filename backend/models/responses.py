@@ -58,4 +58,11 @@ class ProgressSummaryResponse(BaseModel):
     recommended_home_activities: List[str]
     next_meeting_talking_points: List[str]
     overall_progress_score: float
-    visual_data: Optional[Dict[str, Any]] = None 
+    visual_data: Optional[Dict[str, Any]] = None
+
+class VoiceCloneResponse(BaseModel):
+    success: bool
+    audio_base64: Optional[str] = None
+    output_path: Optional[str] = None
+    duration_seconds: Optional[float] = None
+    message: str
