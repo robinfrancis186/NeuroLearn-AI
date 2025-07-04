@@ -19,6 +19,7 @@ import '../widgets/student_avatar_widget.dart';
 import 'story_session_page.dart';
 import 'story_builder_page.dart';
 import 'mistral_story_demo.dart';
+import 'learning_classroom_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -389,11 +390,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildQuickActions() {
     final actions = [
       {
-        'title': 'Mistral AI Stories',
-        'subtitle': 'Generate stories with advanced AI (Mistral 7B)',
-        'icon': Icons.auto_awesome,
+        'title': 'Learning Classroom',
+        'subtitle': 'Explore subjects: Maths, Science, Reading & Social Skills',
+        'icon': Icons.school,
         'color': Colors.deepPurple,
-        'onTap': () => _navigateToMistralDemo(),
+        'onTap': () => _navigateToLearningClassroom(),
       },
       {
         'title': 'Share Memory',
@@ -664,6 +665,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       context,
       MaterialPageRoute(
         builder: (context) => const EmotionEnginePage(),
+      ),
+    );
+  }
+
+  void _navigateToLearningClassroom() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LearningClassroomPage(),
       ),
     );
   }
