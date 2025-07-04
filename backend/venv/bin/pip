@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/robinfrancis/Desktop/NeuroLearn AI/backend/venv/bin/python" "$0" "$@"
-' '''
+#!/Users/joeljaison/Developer/NeuroLearn-AI/backend/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys

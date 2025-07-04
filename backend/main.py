@@ -7,22 +7,28 @@ from typing import Dict, Any
 
 from chains.story_generation_chain import StoryGenerationChain
 from chains.progress_summary_chain import ProgressSummaryChain
+from services.voice_clone_service import VoiceCloneService
 from models.requests import (
     StoryGenerationRequest,
-    ProgressSummaryRequest
+    ProgressSummaryRequest,
+    VoiceCloneRequest
 )
 from models.responses import (
     StoryGenerationResponse,
-    ProgressSummaryResponse
+    ProgressSummaryResponse,
+    VoiceCloneResponse
 )
+
 
 # Load environment variables
 load_dotenv()
 
 app = FastAPI(
     title="NeuroLearn AI API",
-    description="AI-powered educational content generation for neurodivergent learners",
-    version="1.0.0"
+    description="AI-powered educational content generation for neurodivergent learners with Text-to-Speech capabilities",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Configure CORS
@@ -33,10 +39,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Initialize chains
 story_chain = StoryGenerationChain()
 progress_chain = ProgressSummaryChain()
+voice_clone_service = VoiceCloneService()
 
 @app.get("/")
 async def root():
@@ -49,6 +55,31 @@ async def generate_story(request: StoryGenerationRequest) -> StoryGenerationResp
         return await story_chain.run(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Story generation failed: {str(e)}")
+
+@app.post("/clone", response_model=VoiceCloneResponse)
+async def clone_voice(request: VoiceCloneRequest) -> VoiceCloneResponse:
+    """Clone voice using reference audio and generate speech"""
+    try:
+        output_path, audio_base64, duration = voice_clone_service.clone_voice(
+            text=request.text,
+            reference_audio_base64=request.reference_audio,
+            speed=request.speed,
+            language=request.language,
+            output_filename=request.output_filename
+        )
+        
+        return VoiceCloneResponse(
+            success=True,
+            audio_base64=audio_base64,
+            output_path=output_path,
+            duration_seconds=duration,
+            message="Voice cloning completed successfully"
+        )
+    except Exception as e:
+        return VoiceCloneResponse(
+            success=False,
+            message=f"Voice cloning failed: {str(e)}"
+        )
 
 @app.post("/generate-progress-summary", response_model=ProgressSummaryResponse)
 async def generate_progress_summary(request: ProgressSummaryRequest) -> ProgressSummaryResponse:
@@ -65,4 +96,4 @@ async def health_check() -> Dict[str, str]:
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port) 
+    uvicorn.run(app, host="0.0.0.0", port=port)
