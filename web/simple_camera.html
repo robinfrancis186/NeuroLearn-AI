@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Preview</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #camera-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #camera-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        #emotion-overlay {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        #status {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+        }
+        
+        .success {
+            color: #51cf66;
+        }
+        
+        .loading {
+            color: #ffd43b;
+        }
+    </style>
+</head>
+<body>
+    <div id="camera-container">
+        <div id="status">Initializing camera...</div>
+        <video id="camera-video" autoplay playsinline muted></video>
+        <div id="emotion-overlay">
+            <div>😐 Neutral - 0%</div>
+        </div>
+    </div>
+
+    <script>
+        class SimpleCameraPreview {
+            constructor() {
+                this.video = document.getElementById('camera-video');
+                this.status = document.getElementById('status');
+                this.emotionOverlay = document.getElementById('emotion-overlay');
+                this.isInitialized = false;
+                
+                this.init();
+                this.connectToParentWindow();
+            }
+            
+            async init() {
+                try {
+                    this.updateStatus('Requesting camera access...', 'loading');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        },
+                        audio: false
+                    });
+                    
+                    this.video.srcObject = stream;
+                    this.isInitialized = true;
+                    
+                    this.video.onloadedmetadata = () => {
+                        this.updateStatus('Camera active', 'success');
+                        
+                        // Notify parent window that camera is ready
+                        if (window.parent !== window) {
+                            window.parent.postMessage({
+                                type: 'camera_ready',
+                                success: true
+                            }, '*');
+                        }
+                    };
+                    
+                } catch (error) {
+                    console.error('Camera initialization failed:', error);
+                    this.updateStatus('Camera access denied', 'error');
+                    
+                    if (window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'camera_error',
+                            error: error.message
+                        }, '*');
+                    }
+                }
+            }
+            
+            connectToParentWindow() {
+                // Listen for emotion updates from parent window
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'emotion_update') {
+                        this.updateEmotionDisplay(event.data);
+                    }
+                });
+                
+                // Check if parent window has emotion detection data
+                setInterval(() => {
+                    if (window.parent && window.parent.emotionDetection) {
+                        const emotionData = window.parent.emotionDetection;
+                        if (emotionData.currentEmotion && emotionData.confidence > 0) {
+                            this.updateEmotionDisplay({
+                                emotion: emotionData.currentEmotion,
+                                confidence: emotionData.confidence
+                            });
+                        }
+                    }
+                }, 500);
+            }
+            
+            updateEmotionDisplay(data) {
+                const emoji = this.getEmotionEmoji(data.emotion);
+                const confidence = Math.round((data.confidence || 0) * 100);
+                this.emotionOverlay.innerHTML = `<div>${emoji} ${data.emotion.charAt(0).toUpperCase() + data.emotion.slice(1)} - ${confidence}%</div>`;
+            }
+            
+            getEmotionEmoji(emotion) {
+                const emojis = {
+                    'happy': '😊',
+                    'sad': '😢',
+                    'angry': '😠',
+                    'surprise': '😲',
+                    'fear': '😨',
+                    'neutral': '😐'
+                };
+                return emojis[emotion] || '😐';
+            }
+            
+            updateStatus(message, type = 'normal') {
+                this.status.textContent = message;
+                this.status.className = type;
+            }
+        }
+        
+        // Initialize when page loads
+        new SimpleCameraPreview();
+    </script>
+</body>
+</html> 

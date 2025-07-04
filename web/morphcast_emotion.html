@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MorphCast Emotion Detection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        #emotion-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #camera-feed {
+            width: 640px;
+            height: 480px;
+            max-width: 90vw;
+            max-height: 60vh;
+            border-radius: 12px;
+            background: #222;
+        }
+        
+        #emotion-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            text-align: center;
+            min-width: 200px;
+        }
+        
+        #emotion-result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        #emotion-confidence {
+            font-size: 16px;
+            color: #ccc;
+        }
+        
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+        }
+        
+        .success {
+            color: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div id="emotion-container">
+        <div id="status">Initializing camera...</div>
+        <canvas id="camera-feed"></canvas>
+        <div id="emotion-overlay">
+            <div id="emotion-result">😐 Neutral</div>
+            <div id="emotion-confidence">0% confidence</div>
+        </div>
+    </div>
+
+    <!-- MorphCast SDK -->
+    <script src="https://ai-sdk.morphcast.com/v1.16/ai-sdk.js"></script>
+    
+    <script>
+        class EmotionDetector {
+            constructor() {
+                this.currentEmotion = { emotion: 'neutral', confidence: 0 };
+                this.isInitialized = false;
+                this.canvas = document.getElementById('camera-feed');
+                this.statusDiv = document.getElementById('status');
+                this.emotionResult = document.getElementById('emotion-result');
+                this.emotionConfidence = document.getElementById('emotion-confidence');
+                
+                this.emotionEmojis = {
+                    'Happy': '😊',
+                    'Sad': '😢', 
+                    'Angry': '😠',
+                    'Surprise': '😲',
+                    'Fear': '😨',
+                    'Disgust': '🤢',
+                    'Neutral': '😐'
+                };
+                
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    this.updateStatus('Requesting camera access...', 'normal');
+                    
+                    // Initialize MorphCast SDK
+                    await CY.loader()
+                        .licenseKey('free')  // Using free tier for testing
+                        .addModule(CY.modules().FACE_EMOTION.name)
+                        .load();
+                        
+                    this.updateStatus('Initializing emotion detection...', 'normal');
+                    
+                    // Start camera and emotion detection
+                    await CY.camera().init({
+                        canvas: this.canvas,
+                        fps: 20,
+                        camera: {
+                            width: 640,
+                            height: 480
+                        }
+                    });
+                    
+                    // Set up emotion detection callbacks
+                    CY.module(CY.modules().FACE_EMOTION.name).addEventListener([
+                        CY.modules().FACE_EMOTION.eventName.EMOTION_RESULT
+                    ], (evt) => {
+                        this.onEmotionDetected(evt);
+                    });
+                    
+                    this.updateStatus('✅ Real-time emotion detection active', 'success');
+                    this.isInitialized = true;
+                    
+                    // Notify Flutter that we're ready
+                    this.notifyFlutter({
+                        type: 'initialized',
+                        success: true
+                    });
+                    
+                } catch (error) {
+                    console.error('Emotion detection initialization failed:', error);
+                    this.updateStatus('❌ Camera access denied or failed', 'error');
+                    
+                    this.notifyFlutter({
+                        type: 'error',
+                        message: error.message
+                    });
+                }
+            }
+            
+            onEmotionDetected(evt) {
+                const emotions = evt.output.emotion;
+                if (!emotions || emotions.length === 0) return;
+                
+                // Find the emotion with highest confidence
+                let maxEmotion = { emotion: 'Neutral', confidence: 0 };
+                
+                emotions.forEach(emotionData => {
+                    if (emotionData.confidence > maxEmotion.confidence) {
+                        maxEmotion = {
+                            emotion: emotionData.emotion,
+                            confidence: emotionData.confidence
+                        };
+                    }
+                });
+                
+                // Update UI
+                this.updateEmotionDisplay(maxEmotion);
+                
+                // Send to Flutter
+                this.notifyFlutter({
+                    type: 'emotion',
+                    emotion: maxEmotion.emotion.toLowerCase(),
+                    confidence: maxEmotion.confidence,
+                    allEmotions: emotions,
+                    timestamp: Date.now()
+                });
+                
+                this.currentEmotion = maxEmotion;
+            }
+            
+            updateEmotionDisplay(emotionData) {
+                const emoji = this.emotionEmojis[emotionData.emotion] || '❓';
+                const confidence = Math.round(emotionData.confidence * 100);
+                
+                this.emotionResult.textContent = `${emoji} ${emotionData.emotion}`;
+                this.emotionConfidence.textContent = `${confidence}% confidence`;
+            }
+            
+            updateStatus(message, type = 'normal') {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = type;
+            }
+            
+            notifyFlutter(data) {
+                // Send data to Flutter via postMessage
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(JSON.stringify(data), '*');
+                }
+                
+                // Also store in global variable for direct access
+                window.emotionData = data;
+                
+                console.log('Emotion data:', data);
+            }
+            
+            // Public methods for Flutter to call
+            getCurrentEmotion() {
+                return this.currentEmotion;
+            }
+            
+            getStatus() {
+                return {
+                    initialized: this.isInitialized,
+                    emotion: this.currentEmotion
+                };
+            }
+        }
+        
+        // Initialize when page loads
+        let emotionDetector;
+        window.addEventListener('load', () => {
+            emotionDetector = new EmotionDetector();
+        });
+        
+        // Make detector available globally for Flutter
+        window.emotionDetector = () => emotionDetector;
+        
+        // Handle messages from Flutter
+        window.addEventListener('message', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'getEmotion') {
+                    const response = emotionDetector ? emotionDetector.getStatus() : null;
+                    event.source.postMessage(JSON.stringify({
+                        type: 'emotionResponse',
+                        data: response
+                    }), event.origin);
+                }
+            } catch (e) {
+                console.warn('Invalid message:', event.data);
+            }
+        });
+    </script>
+</body>
+</html> 

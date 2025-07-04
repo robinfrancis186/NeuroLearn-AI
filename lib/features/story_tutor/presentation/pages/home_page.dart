@@ -12,6 +12,8 @@ import '../../../dashboard/presentation/pages/student_dashboard_page.dart';
 import '../../../communication/presentation/pages/communication_page.dart';
 import '../../../flashcards/presentation/pages/flashcards_page.dart';
 import '../../../ar_geography/presentation/pages/ar_geography_page.dart';
+import '../../../emotion_engine/emotion_engine_page.dart';
+import '../../../caretaker_portal/navigation/caretaker_navigation.dart';
 import '../widgets/story_queue_widget.dart';
 import '../widgets/student_avatar_widget.dart';
 import 'story_session_page.dart';
@@ -415,6 +417,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         'onTap': () => _navigateToCommunication(),
       },
       {
+        'title': 'Emotion Engine',
+        'subtitle': 'AI-powered emotion detection for personalized stories',
+        'icon': Icons.psychology,
+        'color': Colors.pink,
+        'onTap': () => _navigateToEmotionEngine(),
+      },
+      {
         'title': 'Flashcards',
         'subtitle': 'Practice with personalized flashcards',
         'icon': Icons.quiz,
@@ -571,7 +580,12 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showSettings() {
-    // Navigate to settings
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CaretakerPortal(),
+      ),
+    );
   }
 
   void _logout() {
@@ -641,6 +655,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       context,
       MaterialPageRoute(
         builder: (context) => const MistralStoryDemo(),
+      ),
+    );
+  }
+
+  void _navigateToEmotionEngine() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EmotionEnginePage(),
       ),
     );
   }

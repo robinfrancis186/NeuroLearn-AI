@@ -1,107 +1,71 @@
-# NeuroLearn AI
+# NeuroLearn AI 🧠✨
 
-**Learning Without Limits — One Story at a Time**
+> **Learning Without Limits — One Story at a Time**
 
-NeuroLearn AI is a revolutionary mobile application designed specifically for neurodivergent students, transforming learning into immersive, emotionally resonant storytelling experiences. Powered by advanced AI, personalized through voice cloning, and delivered through a multisensory platform that adapts to each learner's unique journey.
+NeuroLearn AI is an adaptive, emotion-aware educational platform specifically designed for neurodivergent students. It combines AI-powered story generation, real-time emotion detection, and personalized learning experiences to create an inclusive learning environment.
 
-## 🎯 Vision
+## 🌟 Features
 
-To empower neurodivergent students by making learning accessible, engaging, and emotionally connected through the power of storytelling and artificial intelligence.
+### Core Learning Platform
+- **🎭 Emotion Engine**: Real-time facial emotion detection using Google ML Kit
+- **📚 AI Story Generation**: Powered by Mistral 7B and adaptive storytelling
+- **🗣️ Communication Tools**: Visual boards, emotion expression, and social skills practice
+- **🎯 Personalized Learning**: Adaptive content based on cognitive profiles and emotional states
+- **📊 Analytics Dashboard**: Comprehensive progress tracking and insights
+- **🎮 Interactive Elements**: Flashcards, AR geography, and gamified learning
 
-## 🌟 Key Features
+### Accessibility & Neurodivergence Support
+- **♿ Inclusive Design**: High contrast modes, reduced animations, and sensory preferences
+- **🧩 Cognitive Profiling**: Attention span tracking, learning style adaptation
+- **💬 Communication Assistance**: Alternative communication methods and visual supports
+- **🎨 Mood-Based Content**: Stories adapt to emotional states for optimal learning
+- **⏱️ Break Management**: Automatic break suggestions based on attention patterns
 
-### 📚 StoryMode Engine
-- **AI-Driven Storytelling**: Converts educational content into engaging narratives
-- **Real-Time Adaptation**: Stories adapt based on student interaction and emotional state
-- **Personalized Content**: Tailored to individual cognitive profiles and learning styles
+## 🏗️ Architecture
 
-### 🗣️ Voice Integration
-- **OpenVoice Cloning**: Stories narrated in familiar voices (teacher, caregiver)
-- **Speech-to-Text**: Students can interact through voice
-- **Emotion-Sensitive Delivery**: Voice adapts to student's emotional state
+### Frontend (Flutter Web)
+```
+lib/
+├── core/                     # Core business logic and models
+│   ├── models/              # Data models (Student, EmotionalState, etc.)
+│   ├── services/            # Business logic services
+│   └── utils/               # Utility functions and helpers
+├── features/                # Feature-based modules
+│   ├── emotion_engine/      # Emotion detection and analysis
+│   ├── story_tutor/         # Story generation and management
+│   ├── communication/       # Communication assistance tools
+│   ├── dashboard/           # Analytics and progress tracking
+│   ├── flashcards/          # Interactive learning cards
+│   └── ar_geography/        # Augmented reality learning
+├── shared/                  # Shared UI components and themes
+│   ├── widgets/             # Reusable UI components
+│   ├── themes/              # App theming and styling
+│   └── providers/           # State management (Riverpod)
+└── main.dart               # Application entry point
+```
 
-### 🎭 Emotional Intelligence
-- **StoryMood Engine**: Recommends story moods based on emotional state
-- **Facial Expression Analysis**: Real-time emotion detection using ML Kit
-- **Adaptive Response**: Content adjusts to provide appropriate emotional support
+### Backend (Python/FastAPI)
+```
+backend/
+├── app/
+│   ├── api/                 # API endpoints
+│   ├── core/                # Core backend logic
+│   ├── models/              # Database models
+│   └── services/            # Business logic services
+├── mistral_integration/     # Mistral AI integration
+├── emotion_processing/      # Emotion data processing
+└── requirements.txt         # Python dependencies
+```
 
-### 🎮 Core Modules
-
-#### 1. Smart StoryTutor
-- Conversational AI storytelling
-- Dynamic narrative adaptation
-- Interactive learning moments
-- Progress tracking and analytics
-
-#### 2. Gamified Adventures
-- Story chapters unlock as students progress
-- Achievement system with meaningful rewards
-- Character collection and customization
-- Adventure paths based on interests
-
-#### 3. Communication Through Story
-- **StoryTalk AAC**: AAC boards wrapped in character stories
-- **Speech-to-Text Diaries**: Personal story creation
-- **StoryBuilder Mode**: Collaborative story building for expression
-
-#### 4. Parent/Teacher Dashboard
-- Real-time engagement analytics
-- Mood pattern tracking
-- Learning objective progress
-- AI-generated IEP insights
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Flutter**: Cross-platform mobile development
-- **Riverpod**: State management
-- **Flutter Animate**: Smooth animations for better UX
-- **Lottie**: Interactive animations
-- **Camera/ML Kit**: Emotion detection
-
-### Backend & AI
-- **Firebase**: Real-time database and authentication
-- **OpenAI GPT-4**: Story generation and adaptation
-- **OpenVoice**: Voice cloning technology
-- **Google ML Kit**: Facial expression analysis
-- **Whisper**: Speech recognition
-
-### Accessibility & Design
-- **Dyslexia-friendly fonts** (ComicNeue, OpenDyslexic)
-- **High contrast themes** for visual accessibility
-- **Reduced motion options** for sensory sensitivities
-- **AAC support** for communication needs
-
-## 🎨 Design Principles
-
-### Neurodivergent-Friendly Design
-- **Calming Color Palette**: Reduces overstimulation
-- **Clear Visual Hierarchy**: Easy navigation and focus
-- **Consistent Patterns**: Predictable interface reduces anxiety
-- **Customizable Sensory Settings**: Adapts to individual needs
-
-### Emotional Intelligence
-- **Mood-Based Gradients**: Visual feedback for emotional states
-- **Comfort-First Approach**: Safe spaces for learning
-- **Positive Reinforcement**: Celebrates effort over perfection
-
-## 📱 App Flow Example
-
-1. **Student Login** → Emotion detection starts
-2. **Mood Selection** → "How are you feeling today?"
-3. **Story Queue** → AI curates stories based on mood/profile
-4. **Story Session** → Interactive storytelling with voice cloning
-5. **Progress Tracking** → Analytics for parents/teachers
-
-## 🔧 Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Flutter SDK (>=3.13.0)
-- Dart SDK (>=3.1.0)
-- Firebase account
-- OpenAI API key
+- Flutter SDK (>=3.0.0)
+- Dart SDK (>=3.0.0)
+- Python 3.8+ (for backend)
+- Chrome/Edge browser (for web development)
 
-### Setup Instructions
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -109,141 +73,242 @@ To empower neurodivergent students by making learning accessible, engaging, and 
    cd neurolearn-ai
    ```
 
-2. **Install dependencies**
+2. **Install Flutter dependencies**
    ```bash
    flutter pub get
    ```
 
-3. **Configure Firebase**
-   - Create a new Firebase project
-   - Add Android/iOS apps
-   - Download configuration files
-   - Place `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-
-4. **Set up API keys**
+3. **Install backend dependencies**
    ```bash
-   # Copy environment template
-   cp .env.example .env
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+4. **Run the application**
+   ```bash
+   # Frontend (Flutter Web)
+   flutter run -d web-server --web-port=8087
    
-   # Add your API keys
-   OPENAI_API_KEY=your_openai_key
-   FIREBASE_API_KEY=your_firebase_key
+   # Backend (Optional - for full AI features)
+   cd backend
+   python -m uvicorn app.main:app --reload
    ```
 
-5. **Run the app**
-   ```bash
-   flutter run
-   ```
+5. **Open in browser**
+   Navigate to `http://localhost:8087`
 
-## 🏗️ Project Structure
+## 🎯 Core Features Deep Dive
 
+### Emotion Engine
+The Emotion Engine uses advanced facial recognition to detect student emotions and adapt content accordingly:
+
+- **Real-time Detection**: 2-second intervals with confidence scoring
+- **8 Emotion Categories**: Happiness, sadness, anger, fear, surprise, disgust, contempt, neutral
+- **Mood Mapping**: Emotions mapped to 7 story mood types for optimal learning
+- **Intervention System**: Automatic calming or energizing content recommendations
+
+### Story Generation System
+AI-powered storytelling that creates personalized educational content:
+
+- **Memory Integration**: Family stories converted to learning adventures
+- **Adaptive Narrative**: Stories adjust based on emotional state and learning progress
+- **Multi-modal Input**: Voice notes, manual entry, and guided story building
+- **Educational Focus**: Math, reading, science concepts woven into engaging narratives
+
+### Communication Tools
+Comprehensive communication assistance for neurodivergent learners:
+
+- **Visual Communication Board**: Category-based word selection
+- **Emotion Expression**: Visual emotion identification and communication
+- **Social Skills Practice**: Interactive conversation scenarios
+- **Voice Practice**: Speech exercises with feedback
+
+## 🛠️ Development
+
+### Code Style & Standards
+- **Dart/Flutter**: Follow official Dart style guide
+- **File Organization**: Feature-based folder structure
+- **Naming Conventions**: PascalCase for classes, camelCase for variables
+- **Documentation**: Comprehensive inline documentation for all public APIs
+
+### State Management
+Using **Riverpod** for predictable state management:
+- Providers for global state
+- StateNotifiers for complex state logic
+- Consumer widgets for reactive UI
+
+### Testing Strategy
+```bash
+# Unit tests
+flutter test
+
+# Integration tests
+flutter test integration_test/
+
+# Widget tests
+flutter test test/widget_test/
 ```
-lib/
-├── core/
-│   ├── models/          # Data models (StudentProfile, StorySession, etc.)
-│   ├── services/        # Core services (AI, Voice, Firebase, Emotion)
-│   └── constants/       # App constants and configurations
-├── features/
-│   ├── story_tutor/     # Main storytelling interface
-│   ├── communication/   # AAC and communication tools
-│   ├── dashboard/       # Parent/teacher analytics
-│   └── gamification/    # Achievements and progress
-├── shared/
-│   ├── widgets/         # Reusable UI components
-│   ├── themes/          # App theming and accessibility
-│   └── providers/       # State management providers
-└── main.dart           # App entry point
+
+### Adding New Features
+
+1. **Create feature module** in `lib/features/`
+2. **Define models** in `lib/core/models/`
+3. **Implement services** in `lib/core/services/`
+4. **Add routing** in main navigation
+5. **Write tests** for all components
+
+## 📱 Supported Platforms
+
+- ✅ **Web** (Primary platform)
+- 🔄 **iOS** (Planned)
+- 🔄 **Android** (Planned)
+- 🔄 **Desktop** (Future consideration)
+
+## 🔧 Configuration
+
+### Environment Variables
+Create `.env` file for configuration:
+```bash
+# AI Model Configuration
+MISTRAL_API_KEY=your_mistral_key
+OPENAI_API_KEY=your_openai_key
+
+# Database Configuration
+DATABASE_URL=your_database_url
+
+# Feature Flags
+ENABLE_EMOTION_ENGINE=true
+ENABLE_AR_FEATURES=false
 ```
+
+### ML Kit Setup
+For emotion detection, ensure ML Kit dependencies are properly configured:
+```yaml
+dependencies:
+  google_ml_kit: ^0.15.0
+  camera: ^0.10.0
+  permission_handler: ^10.0.0
+```
+
+### Model Context Protocol (MCP) Integration
+NeuroLearn AI includes Context7 MCP server for enhanced development experience:
+
+- **Real-time Documentation**: Instant access to up-to-date library documentation
+- **AI-Assisted Development**: Smart code completion with current best practices
+- **Framework Support**: Flutter, Dart, Python, FastAPI, and ML libraries
+
+**Configuration**: `~/.cursor/mcp.json`
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    }
+  }
+}
+```
+
+See [MCP Integration Guide](docs/mcp_integration.md) for detailed setup and usage instructions.
+
+## 🎨 Theming & Accessibility
+
+### Design System
+- **Primary Colors**: Blue (#2196F3) for focus, Green (#4CAF50) for comfort
+- **Typography**: Accessible fonts with clear hierarchy
+- **Spacing**: 8px grid system for consistent layouts
+- **Components**: Material Design 3 with custom neurodivergent adaptations
+
+### Accessibility Features
+- High contrast mode
+- Reduced motion options
+- Large text support
+- Screen reader compatibility
+- Keyboard navigation
+
+## 📊 Analytics & Privacy
+
+### Data Collection
+- **Learning Progress**: Anonymized learning analytics
+- **Emotion Data**: Local processing, no cloud storage
+- **Usage Patterns**: Aggregate usage statistics for improvement
+
+### Privacy Compliance
+- COPPA compliant for children's data
+- GDPR ready with data export/deletion
+- Local-first architecture for sensitive data
 
 ## 🤝 Contributing
 
-We welcome contributions from developers, educators, and accessibility experts!
+### Getting Started
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-### Development Guidelines
-- Follow Flutter/Dart style guidelines
-- Ensure accessibility compliance (WCAG 2.1 AA)
-- Test with screen readers and assistive technologies
-- Include unit tests for core functionality
+### Development Workflow
+1. **Issue Creation**: Use GitHub issues for bug reports and feature requests
+2. **Code Review**: All PRs require review and automated testing
+3. **Testing**: Maintain >80% code coverage
+4. **Documentation**: Update docs for any API changes
 
-### Accessibility Requirements
-- Minimum contrast ratio of 4.5:1
-- Touch targets minimum 44x44 points
-- Screen reader compatibility
-- Keyboard navigation support
-
-## 📊 Research & Evidence
-
-### Supporting Research
-- **Storytelling & Learning**: Stories improve comprehension by 30% in neurodivergent students
-- **Voice Familiarity**: Familiar voices increase attention span by 40%
-- **Emotional Regulation**: Mood-adaptive content reduces anxiety by 25%
-
-### Compliance
-- **COPPA Compliant**: Designed for children under 13
-- **FERPA Compliant**: Educational data privacy
-- **ADA Section 508**: Accessibility standards
-
-## 🔐 Privacy & Security
-
-### Data Protection
-- End-to-end encryption for voice data
-- Local processing for emotion detection
-- Minimal data collection with explicit consent
-- Regular security audits and updates
-
-### Student Privacy
-- No personal data sharing with third parties
-- Parent/guardian control over data usage
-- Right to data deletion
-- Transparent privacy policy
-
-## 📈 Analytics & Insights
-
-### Learning Analytics
-- Story completion rates
-- Interaction patterns
-- Emotional engagement metrics
-- Comprehension scoring
-
-### Adaptive Intelligence
-- Real-time content adjustment
-- Personalized learning paths
-- Predictive mood modeling
-- Intervention recommendations
-
-## 🚀 Roadmap
+## 📋 Roadmap
 
 ### Phase 1 (Current)
-- ✅ Core storytelling engine
-- ✅ Basic emotion detection
-- ✅ Voice integration
-- ✅ Student profiles
+- ✅ Core emotion detection
+- ✅ Basic story generation
+- ✅ Communication tools
+- ✅ Web platform
 
-### Phase 2 (Q2 2024)
-- 🔄 Advanced voice cloning
+### Phase 2 (Next 3 months)
+- 🔄 Advanced AI tutoring
+- 🔄 Parent/teacher dashboard
+- 🔄 Mobile app development
 - 🔄 Multi-language support
-- 🔄 Offline mode
-- 🔄 Teacher dashboard enhancements
 
-### Phase 3 (Q4 2024)
-- 📅 AR/VR story experiences
-- 📅 Collaborative storytelling
-- 📅 Advanced analytics
-- 📅 API for educational platforms
+### Phase 3 (6-12 months)
+- 🔄 AR/VR learning experiences
+- 🔄 Advanced analytics
+- 🔄 Third-party integrations
+- 🔄 Marketplace for content
 
-## 📞 Support
+## 📚 Documentation
 
-### For Educators
-- Training materials and best practices
-- Implementation guides
-- Professional development resources
-- Research collaboration opportunities
+### Core Documentation
+- [📖 Development Guide](DEVELOPMENT_GUIDE.md) - Comprehensive development setup and guidelines
+- [🏗️ Architecture](docs/architecture.md) - System architecture and design patterns
+- [📁 Code Organization](docs/code_organization.md) - Project structure and file organization
+- [🚀 Deployment Guide](docs/deployment.md) - Deployment strategies and configurations
 
-### For Families
-- Parent guides and tutorials
-- Community support forums
-- Regular feature updates
-- Accessibility consultations
+### API & Technical Reference
+- [🔌 API Reference](docs/api.md) - Complete API documentation with examples
+- [🎨 Widget Catalog](docs/widgets.md) - UI component library and usage guide
+- [🔧 Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+
+### Specialized Guides
+- [🧩 Neurodivergence Support](docs/neurodivergence.md) - Understanding and supporting neurodivergent learners
+- [♿ Accessibility Guidelines](docs/accessibility/) - WCAG compliance and inclusive design
+- [🎯 Testing Strategy](docs/testing.md) - Comprehensive testing approaches
+
+## 🆘 Support & Resources
+
+### Getting Help
+- **📋 GitHub Issues**: [Report bugs and request features](https://github.com/your-org/neurolearn-ai/issues)
+- **💬 Discord Community**: [Join our developer community](https://discord.gg/neurolearn-ai)
+- **📧 Email Support**: technical-support@neurolearn-ai.com
+- **📖 Documentation**: [Browse comprehensive guides](docs/)
+
+### Community Guidelines
+- **🤝 Be Respectful**: Treat all contributors with kindness and respect
+- **🌟 Be Inclusive**: Consider neurodivergent users in all design decisions
+- **💡 Be Constructive**: Provide helpful feedback and actionable suggestions
+- **🎯 Be Patient**: Remember we're all learning and growing together
+
+### Educational Resources
+- [Understanding Neurodivergence](docs/neurodivergence.md) - Research-backed insights
+- [Inclusive Design Principles](docs/accessibility/guidelines.md) - Best practices for accessibility
+- [Emotion Recognition Ethics](docs/ethics.md) - Ethical considerations and privacy
 
 ## 📄 License
 
@@ -251,13 +316,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Neurodivergent Community**: For insights and feedback
-- **Educators**: For real-world testing and validation
-- **Accessibility Experts**: For guidance on inclusive design
-- **Open Source Contributors**: For tools and libraries
+- Google ML Kit team for emotion detection capabilities
+- Mistral AI for advanced language modeling
+- Flutter team for the amazing cross-platform framework
+- Neurodivergent community for guidance and feedback
 
 ---
 
-**Built with ❤️ for neurodivergent learners everywhere**
+**Made with ❤️ for inclusive education**
 
-*NeuroLearn AI - Where every story is a pathway to learning* 
+*NeuroLearn AI - Empowering every learner to reach their full potential* 

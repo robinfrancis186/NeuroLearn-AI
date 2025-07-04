@@ -3,8 +3,7 @@
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
+    href value below to reflect the correct path.
     The path provided below has to start and end with a slash "/" in order for
     it to work correctly.
 
@@ -18,7 +17,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="NeuroLearn AI - Learning Without Limits">
+  <meta name="description" content="NeuroLearn AI - Educational app for neurodivergent students">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,28 +31,504 @@
   <title>NeuroLearn AI</title>
   <link rel="manifest" href="manifest.json">
 
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = null;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Real-time emotion detection container */
+    #emotion-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: transparent;
+      pointer-events: none;
+    }
+    
+    #camera-video {
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      position: relative;
+      border-radius: 12px;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror the video for natural selfie view */
+    }
+    
+    #emotion-debug {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      display: block;
+      min-width: 200px;
+    }
+    
+    .status-active {
+      color: #4ade80;
+    }
+    
+    .status-error {
+      color: #ef4444;
+    }
+    
+    .status-loading {
+      color: #fbbf24;
+    }
+  </style>
 </head>
 <body>
+  <!-- Real-time emotion detection container -->
+  <div id="emotion-container">
+    <video id="camera-video" autoplay muted playsinline></video>
+    <div id="emotion-debug">
+      <div><strong>🧠 Real AI Emotion Detection</strong></div>
+      <div>Status: <span id="status" class="status-loading">Initializing...</span></div>
+      <div>Emotion: <span id="current-emotion">neutral</span></div>
+      <div>Confidence: <span id="confidence">0%</span></div>
+      <div>Camera: <span id="camera-status">Off</span></div>
+    </div>
+  </div>
+
+  <!-- This script installs service_worker.js to provide PWA functionality to
+       application. For more information, see:
+       https://developers.google.com/web/fundamentals/primers/service-workers -->
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
+    var serviceWorkerVersion = null;
+    var scriptLoaded = false;
+    function loadMainDartJs() {
+      if (scriptLoaded) {
+        return;
+      }
+      scriptLoaded = true;
+      var scriptTag = document.createElement('script');
+      scriptTag.src = 'main.dart.js';
+      scriptTag.type = 'application/javascript';
+      document.body.append(scriptTag);
+    }
+
+    if ('serviceWorker' in navigator) {
+      // Service workers are supported. Use them.
+      window.addEventListener('load', function () {
+        // Wait for registration to finish before dropping the <script> tag.
+        // Otherwise, the browser will load the script multiple times,
+        // potentially different versions.
+        var serviceWorkerUrl = 'flutter_service_worker.js?v=' + serviceWorkerVersion;
+        navigator.serviceWorker.register(serviceWorkerUrl)
+          .then((reg) => {
+            function waitForActivation(serviceWorker) {
+              serviceWorker.addEventListener('statechange', () => {
+                if (serviceWorker.state == 'activated') {
+                  console.log('Installed new service worker.');
+                  loadMainDartJs();
+                }
+              });
+            }
+            if (!reg.active && (reg.installing || reg.waiting)) {
+              // No active web worker and we have installed or are installing
+              // one for the first time. Simply wait for it to activate.
+              waitForActivation(reg.installing || reg.waiting);
+            } else if (!reg.active.scriptURL.endsWith(serviceWorkerVersion)) {
+              // When the app updates the serviceWorkerVersion changes, so we
+              // need to ask the service worker to update.
+              console.log('New service worker available.');
+              reg.update();
+              waitForActivation(reg.installing);
+            } else {
+              // Existing service worker is still good.
+              console.log('Loading app from service worker.');
+              loadMainDartJs();
+            }
           });
-        }
+
+        // If service worker doesn't succeed in a reasonable amount of time,
+        // fallback to plaint <script> tag.
+        setTimeout(() => {
+          if (!scriptLoaded) {
+            console.warn(
+              'Failed to load app from service worker. Falling back to plain <script> tag.',
+            );
+            loadMainDartJs();
+          }
+        }, 4000);
       });
+    } else {
+      // Service workers not supported. Just drop the <script> tag.
+      loadMainDartJs();
+    }
+  </script>
+
+  <!-- MediaPipe for face detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <!-- TensorFlow.js for ML -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  
+  <!-- Real Emotion Detection Script -->
+  <script>
+    // Global emotion detection state
+    window.emotionDetection = {
+      isInitialized: false,
+      currentEmotion: 'neutral',
+      confidence: 0.0,
+      allEmotions: {},
+      status: 'initializing'
+    };
+
+    // Real-time emotion detection class
+    class RealEmotionDetector {
+      constructor() {
+        this.isInitialized = false;
+        this.video = document.getElementById('camera-video');
+        this.statusElement = document.getElementById('status');
+        this.emotionElement = document.getElementById('current-emotion');
+        this.confidenceElement = document.getElementById('confidence');
+        this.cameraStatusElement = document.getElementById('camera-status');
+        
+        this.faceMesh = null;
+        this.camera = null;
+        this.currentEmotion = { emotion: 'neutral', confidence: 0 };
+        this.lastDetectionTime = 0;
+        
+        // Emotion detection based on facial landmarks
+        this.emotionPatterns = {
+          happy: { mouthCurve: 0.7, eyeOpenness: 0.5, browHeight: 0.4 },
+          sad: { mouthCurve: -0.7, eyeOpenness: 0.3, browHeight: -0.4 },
+          angry: { mouthCurve: -0.3, eyeOpenness: 0.4, browHeight: -0.8 },
+          surprise: { mouthCurve: 0.0, eyeOpenness: 0.8, browHeight: 0.8 },
+          fear: { mouthCurve: -0.2, eyeOpenness: 0.7, browHeight: 0.6 },
+          neutral: { mouthCurve: 0.0, eyeOpenness: 0.5, browHeight: 0.0 }
+        };
+        
+        this.init();
+      }
+      
+      async init() {
+        try {
+          console.log('🔄 Initializing Real Emotion Detection...');
+          this.updateStatus('Requesting camera access...', 'loading');
+          
+          // Initialize camera
+          await this.initializeCamera();
+          
+          this.updateStatus('Loading face detection AI...', 'loading');
+          
+          // Initialize MediaPipe Face Mesh
+          this.faceMesh = new FaceMesh({
+            locateFile: (file) => {
+              return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+            }
+          });
+          
+          this.faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+          });
+          
+          this.faceMesh.onResults((results) => {
+            this.onFaceDetected(results);
+          });
+          
+          // Start camera processing
+          this.camera = new Camera(this.video, {
+            onFrame: async () => {
+              if (this.faceMesh) {
+                await this.faceMesh.send({ image: this.video });
+              }
+            },
+            width: 320,
+            height: 240
+          });
+          
+          await this.camera.start();
+          
+          this.isInitialized = true;
+          window.emotionDetection.isInitialized = true;
+          window.emotionDetection.status = 'active';
+          
+          this.updateStatus('✅ Real-time emotion detection active', 'active');
+          this.updateCameraStatus('📹 Active');
+          console.log('✅ Real emotion detection initialized successfully!');
+          
+        } catch (error) {
+          console.error('❌ Real emotion detection initialization failed:', error);
+          this.updateStatus('❌ Camera access denied or failed', 'error');
+          this.updateCameraStatus('❌ Error');
+          window.emotionDetection.status = 'error';
+        }
+      }
+      
+      async initializeCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { 
+              width: 320, 
+              height: 240,
+              facingMode: 'user'
+            }
+          });
+          
+          this.video.srcObject = stream;
+          
+          return new Promise((resolve) => {
+            this.video.onloadedmetadata = () => {
+              resolve();
+            };
+          });
+        } catch (error) {
+          throw new Error(`Camera access failed: ${error.message}`);
+        }
+      }
+      
+      onFaceDetected(results) {
+        if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+          // No face detected - default to neutral
+          this.updateEmotionState('neutral', 0.5);
+          return;
+        }
+        
+        try {
+          const landmarks = results.multiFaceLandmarks[0];
+          const emotion = this.analyzeFacialExpression(landmarks);
+          
+          this.updateEmotionState(emotion.emotion, emotion.confidence);
+          
+          // Throttle updates to avoid overwhelming Flutter
+          const now = Date.now();
+          if (now - this.lastDetectionTime > 500) { // Update every 500ms
+            this.notifyFlutter({
+              type: 'emotion',
+              emotion: emotion.emotion,
+              confidence: emotion.confidence,
+              allEmotions: emotion.allEmotions,
+              timestamp: now
+            });
+            this.lastDetectionTime = now;
+          }
+          
+        } catch (error) {
+          console.warn('Error analyzing facial expression:', error);
+        }
+      }
+      
+      analyzeFacialExpression(landmarks) {
+        try {
+          // Extract key facial features
+          const features = this.extractFacialFeatures(landmarks);
+          
+          // Calculate emotion probabilities
+          const emotionScores = {};
+          let maxScore = 0;
+          let dominantEmotion = 'neutral';
+          
+          for (const [emotion, pattern] of Object.entries(this.emotionPatterns)) {
+            const score = this.calculateEmotionScore(features, pattern);
+            emotionScores[emotion] = Math.max(0, score);
+            
+            if (score > maxScore) {
+              maxScore = score;
+              dominantEmotion = emotion;
+            }
+          }
+          
+          // Normalize scores
+          const total = Object.values(emotionScores).reduce((sum, score) => sum + score, 0);
+          const normalizedScores = {};
+          
+          if (total > 0) {
+            for (const [emotion, score] of Object.entries(emotionScores)) {
+              normalizedScores[emotion] = score / total;
+            }
+          } else {
+            normalizedScores.neutral = 1.0;
+          }
+          
+          const confidence = Math.min(0.95, Math.max(0.1, normalizedScores[dominantEmotion]));
+          
+          return {
+            emotion: dominantEmotion,
+            confidence: confidence,
+            allEmotions: normalizedScores
+          };
+          
+        } catch (error) {
+          console.warn('Error in emotion analysis:', error);
+          return {
+            emotion: 'neutral',
+            confidence: 0.5,
+            allEmotions: { neutral: 1.0 }
+          };
+        }
+      }
+      
+      extractFacialFeatures(landmarks) {
+        // Key landmark indices for emotion detection
+        const MOUTH_CORNERS = [61, 291]; // Left and right mouth corners
+        const MOUTH_TOP = [13]; // Top lip center
+        const MOUTH_BOTTOM = [14]; // Bottom lip center
+        const LEFT_EYE = [33, 7, 163, 144, 145, 153, 154, 155, 133];
+        const RIGHT_EYE = [362, 382, 381, 380, 374, 373, 390, 249, 263];
+        const LEFT_EYEBROW = [70, 63, 105, 66, 107];
+        const RIGHT_EYEBROW = [296, 334, 293, 300, 276];
+        
+        try {
+          // Calculate mouth curvature
+          const leftCorner = landmarks[MOUTH_CORNERS[0]];
+          const rightCorner = landmarks[MOUTH_CORNERS[1]];
+          const mouthTop = landmarks[MOUTH_TOP[0]];
+          const mouthBottom = landmarks[MOUTH_BOTTOM[0]];
+          
+          const mouthWidth = Math.abs(rightCorner.x - leftCorner.x);
+          const mouthHeight = Math.abs(mouthBottom.y - mouthTop.y);
+          const mouthCenterY = (leftCorner.y + rightCorner.y) / 2;
+          const mouthCurve = (mouthTop.y - mouthCenterY) / mouthHeight;
+          
+          // Calculate eye openness
+          const leftEyeOpenness = this.calculateEyeOpenness(landmarks, LEFT_EYE);
+          const rightEyeOpenness = this.calculateEyeOpenness(landmarks, RIGHT_EYE);
+          const avgEyeOpenness = (leftEyeOpenness + rightEyeOpenness) / 2;
+          
+          // Calculate eyebrow position
+          const leftBrowHeight = this.calculateBrowHeight(landmarks, LEFT_EYEBROW, LEFT_EYE);
+          const rightBrowHeight = this.calculateBrowHeight(landmarks, RIGHT_EYEBROW, RIGHT_EYE);
+          const avgBrowHeight = (leftBrowHeight + rightBrowHeight) / 2;
+          
+          return {
+            mouthCurve: mouthCurve,
+            eyeOpenness: avgEyeOpenness,
+            browHeight: avgBrowHeight
+          };
+          
+        } catch (error) {
+          console.warn('Error extracting facial features:', error);
+          return {
+            mouthCurve: 0,
+            eyeOpenness: 0.5,
+            browHeight: 0
+          };
+        }
+      }
+      
+      calculateEyeOpenness(landmarks, eyeIndices) {
+        try {
+          const eyePoints = eyeIndices.map(i => landmarks[i]);
+          const eyeHeight = Math.abs(eyePoints[1].y - eyePoints[5].y);
+          const eyeWidth = Math.abs(eyePoints[0].x - eyePoints[3].x);
+          return eyeWidth > 0 ? eyeHeight / eyeWidth : 0.5;
+        } catch (error) {
+          return 0.5;
+        }
+      }
+      
+      calculateBrowHeight(landmarks, browIndices, eyeIndices) {
+        try {
+          const browY = browIndices.reduce((sum, i) => sum + landmarks[i].y, 0) / browIndices.length;
+          const eyeY = eyeIndices.reduce((sum, i) => sum + landmarks[i].y, 0) / eyeIndices.length;
+          return browY - eyeY;
+        } catch (error) {
+          return 0;
+        }
+      }
+      
+      calculateEmotionScore(features, pattern) {
+        const mouthDiff = Math.abs(features.mouthCurve - pattern.mouthCurve);
+        const eyeDiff = Math.abs(features.eyeOpenness - pattern.eyeOpenness);
+        const browDiff = Math.abs(features.browHeight - pattern.browHeight);
+        
+        // Lower difference = higher score
+        const score = 1.0 - (mouthDiff + eyeDiff + browDiff) / 3;
+        return Math.max(0, score);
+      }
+      
+      updateEmotionState(emotion, confidence) {
+        // Update global state
+        window.emotionDetection.currentEmotion = emotion;
+        window.emotionDetection.confidence = confidence;
+        
+        // Update UI
+        if (this.emotionElement) {
+          this.emotionElement.textContent = emotion;
+        }
+        if (this.confidenceElement) {
+          this.confidenceElement.textContent = Math.round(confidence * 100) + '%';
+        }
+        
+        this.currentEmotion = { emotion, confidence };
+      }
+      
+      updateStatus(message, type = 'loading') {
+        if (this.statusElement) {
+          this.statusElement.textContent = message;
+          this.statusElement.className = `status-${type}`;
+        }
+        console.log('Real Emotion Detection:', message);
+      }
+      
+      updateCameraStatus(status) {
+        if (this.cameraStatusElement) {
+          this.cameraStatusElement.textContent = status;
+        }
+      }
+      
+      notifyFlutter(data) {
+        // Store in global variable for Flutter to access
+        window.emotionDetection.lastUpdate = data;
+        window.emotionDetection.allEmotions = data.allEmotions || {};
+        
+        // Try to call Flutter callback if available
+        if (window.flutterEmotionCallback) {
+          try {
+            window.flutterEmotionCallback(data);
+          } catch (e) {
+            console.warn('Flutter callback error:', e);
+          }
+        }
+      }
+      
+      getCurrentEmotion() {
+        return {
+          emotion: window.emotionDetection.currentEmotion,
+          confidence: window.emotionDetection.confidence,
+          allEmotions: window.emotionDetection.allEmotions,
+          isInitialized: this.isInitialized,
+          status: window.emotionDetection.status
+        };
+      }
+    }
+    
+    // Initialize when page loads
+    let realEmotionDetector;
+    window.addEventListener('load', () => {
+      // Wait for Flutter to load
+      setTimeout(() => {
+        realEmotionDetector = new RealEmotionDetector();
+        window.realEmotionDetector = realEmotionDetector;
+      }, 2000);
     });
+    
+    // Global functions for Flutter to access
+    window.getRealEmotion = function() {
+      return window.emotionDetection;
+    };
+    
+    window.isEmotionDetectionReady = function() {
+      return realEmotionDetector && realEmotionDetector.isInitialized;
+    };
   </script>
 </body>
 </html> 
