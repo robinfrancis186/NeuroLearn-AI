@@ -155,3 +155,4 @@ logs/
 
 # Allow all Dart files in lib/ to be tracked
 !lib/**/*.dart
+backend/outputs/
