@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'core/services/voice_service.dart';
 import 'core/services/ai_service.dart';
+import 'core/services/voice_upload_service.dart';
 import 'shared/themes/app_theme.dart';
 import 'shared/providers/app_providers.dart';
 import 'features/story_tutor/presentation/pages/home_page.dart';
@@ -32,6 +33,7 @@ void main() async {
   // Initialize core services
   await VoiceService.initialize();
   await AIService.initialize();
+  await VoiceUploadService.initialize();
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(

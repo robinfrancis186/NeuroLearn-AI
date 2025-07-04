@@ -35,6 +35,7 @@ dependencies:
   speech_to_text: ^6.6.0
   audioplayers: ^5.2.1
   record: ^5.0.4
+  file_picker: ^6.1.1
   
   # AI & ML
   dart_openai: ^5.1.0
